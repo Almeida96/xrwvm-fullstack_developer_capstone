@@ -169,7 +169,7 @@
           if (isLoggedIn) {
             const reviewCell = document.createElement("td");
             const reviewLink = document.createElement("a");
-            reviewLink.href = "/postreview/" + encodeURIComponent(dealer.id);
+            reviewLink.href = "/postreview/" + encodeURIComponent(dealer.id) + "/";
             reviewLink.className = "review-link";
             reviewLink.textContent = "Review Dealer";
             reviewLink.setAttribute("aria-label", "Review " + dealer.full_name);
