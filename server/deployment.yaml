@@ -1,0 +1,63 @@
+# Lab-only, single-pod demo of the three services.
+# Substitute ${SN_ICR_NAMESPACE} before applying; kubectl does not expand shell variables.
+# MongoDB data uses ephemeral storage and is not intended for production.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dealership
+  labels:
+    app: dealership
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: dealership
+  template:
+    metadata:
+      labels:
+        app: dealership
+    spec:
+      imagePullSecrets:
+        - name: icr-secret
+      hostAliases:
+        - ip: "127.0.0.1"
+          hostnames:
+            - mongo_db
+      containers:
+        - name: django
+          image: us.icr.io/${SN_ICR_NAMESPACE}/dealership:capstone
+          imagePullPolicy: Always
+          env:
+            - name: DJANGO_SETTINGS_MODULE
+              value: djangoproj.k8s_settings
+            - name: backend_url
+              value: http://127.0.0.1:3030
+          ports:
+            - name: http
+              containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 8
+            periodSeconds: 10
+        - name: node-api
+          image: us.icr.io/${SN_ICR_NAMESPACE}/nodeapp:capstone
+          imagePullPolicy: Always
+          ports:
+            - name: node-api
+              containerPort: 3030
+        - name: mongodb
+          image: mongo:7
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: mongodb
+              containerPort: 27017
+          volumeMounts:
+            - name: mongo-data
+              mountPath: /data/db
+      volumes:
+        - name: mongo-data
+          emptyDir: {}
