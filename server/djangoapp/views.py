@@ -13,7 +13,7 @@ from django.contrib.auth import login, authenticate, logout
 import logging
 import json
 from django.views.decorators.csrf import csrf_exempt
-from requests.exceptions import RequestException
+from requests.exceptions import RequestException, HTTPError
 from .restapis import get_request
 # from .populate import initiate
 
@@ -82,9 +82,23 @@ def get_dealer_reviews(request, dealer_id):
 
     return JsonResponse(reviews, safe=False)
 
-# Create a `get_dealer_details` view to render the dealer details
-# def get_dealer_details(request, dealer_id):
-# ...
+# Get a dealership by numeric ID (proxy to Node.js/MongoDB).
+def get_dealer_details(request, dealer_id):
+    if request.method != "GET":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    try:
+        dealer_list = get_request(f"fetchDealer/{dealer_id}")
+    except HTTPError as error:
+        if error.response is not None and error.response.status_code == 404:
+            return JsonResponse({"error": "Dealership not found"}, status=404)
+        logger.warning("Backend error fetching dealership %s: %s", dealer_id, error)
+        return JsonResponse({"error": "Dealership service unavailable"}, status=502)
+    except (RequestException, ValueError) as error:
+        logger.warning("Unable to fetch dealership %s: %s", dealer_id, error)
+        return JsonResponse({"error": "Dealership service unavailable"}, status=502)
+
+    return JsonResponse({"status": 200, "dealer": dealer_list})
 
 # Create a `add_review` view to submit a review
 # def add_review(request):
