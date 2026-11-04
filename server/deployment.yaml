@@ -21,10 +21,6 @@ spec:
     spec:
       imagePullSecrets:
         - name: icr-secret
-      hostAliases:
-        - ip: "127.0.0.1"
-          hostnames:
-            - mongo_db
       containers:
         - name: django
           image: us.icr.io/${SN_ICR_NAMESPACE}/dealership:capstone
@@ -46,6 +42,9 @@ spec:
         - name: node-api
           image: us.icr.io/${SN_ICR_NAMESPACE}/nodeapp:capstone
           imagePullPolicy: Always
+          env:
+            - name: MONGO_URI
+              value: mongodb://127.0.0.1:27017/
           ports:
             - name: node-api
               containerPort: 3030
