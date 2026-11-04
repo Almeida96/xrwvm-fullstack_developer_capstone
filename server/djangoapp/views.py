@@ -55,10 +55,18 @@ def logout_request(request):
 # def registration(request):
 # ...
 
-# # Update the `get_dealerships` view to render the index page with
-# a list of dealerships
-# def get_dealerships(request):
-# ...
+# Return dealership data to the React frontend through the Node.js backend.
+def get_dealerships(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    try:
+        dealers = get_request("fetchDealers")
+    except (RequestException, ValueError) as error:
+        logger.warning("Unable to fetch dealerships: %s", error)
+        return JsonResponse({"error": "Dealership service unavailable"}, status=502)
+
+    return JsonResponse({"status": 200, "dealers": dealers})
 
 # Create a `get_dealer_reviews` view to render the reviews of a dealer
 def get_dealer_reviews(request, dealer_id):
