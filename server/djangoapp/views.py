@@ -13,6 +13,8 @@ from django.contrib.auth import login, authenticate, logout
 import logging
 import json
 from django.views.decorators.csrf import csrf_exempt
+from requests.exceptions import RequestException
+from .restapis import get_request
 # from .populate import initiate
 
 
@@ -59,8 +61,18 @@ def logout_request(request):
 # ...
 
 # Create a `get_dealer_reviews` view to render the reviews of a dealer
-# def get_dealer_reviews(request,dealer_id):
-# ...
+def get_dealer_reviews(request, dealer_id):
+    """Return reviews for a dealership through the Node.js/MongoDB service."""
+    if request.method != "GET":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    try:
+        reviews = get_request(f"fetchReviews/dealer/{dealer_id}")
+    except (RequestException, ValueError) as error:
+        logger.warning("Unable to fetch dealership reviews: %s", error)
+        return JsonResponse({"error": "Dealership reviews service unavailable"}, status=502)
+
+    return JsonResponse(reviews, safe=False)
 
 # Create a `get_dealer_details` view to render the dealer details
 # def get_dealer_details(request, dealer_id):
