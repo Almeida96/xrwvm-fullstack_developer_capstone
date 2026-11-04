@@ -74,7 +74,21 @@ app.get('/fetchDealers/:state', async (req, res) => {
 
 // Express route to fetch dealer by a particular id
 app.get('/fetchDealer/:id', async (req, res) => {
-//Write your code here
+  const dealerId = Number(req.params.id);
+  if (!Number.isInteger(dealerId) || dealerId < 1) {
+    return res.status(400).json({ error: 'Invalid dealership ID' });
+  }
+  try {
+    // Return an array so the Django/React dealership-detail page can consume it.
+    const dealers = await Dealerships.find({ id: dealerId });
+    if (dealers.length === 0) {
+      return res.status(404).json({ error: 'Dealership not found' });
+    }
+    return res.json(dealers);
+  } catch (error) {
+    console.error('Error fetching dealership by ID:', error);
+    return res.status(500).json({ error: 'Error fetching dealership' });
+  }
 });
 
 //Express route to insert review
