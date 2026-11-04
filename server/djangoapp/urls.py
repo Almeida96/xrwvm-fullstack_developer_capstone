@@ -12,7 +12,8 @@ urlpatterns = [
     path(route='login', view=views.login_user, name='login'),
     path(route='logout', view=views.logout_request, name='logout'),
 
-    # path for dealer reviews view
+    # Dealer reviews API (Django proxy to the Node.js service)
+    path(route='get_dealer_reviews/<int:dealer_id>', view=views.get_dealer_reviews, name='get_dealer_reviews'),
 
     # path for add a review view
 
