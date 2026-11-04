@@ -15,6 +15,7 @@ import json
 from django.views.decorators.csrf import csrf_exempt
 from requests.exceptions import RequestException, HTTPError
 from .restapis import get_request
+from .models import CarMake, CarModel
 # from .populate import initiate
 
 
@@ -116,3 +117,25 @@ def get_dealer_details(request, dealer_id):
 # Create a `add_review` view to submit a review
 # def add_review(request):
 # ...
+
+# List the car makes and models used by the React post-review form.
+def get_cars(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    car_makes = list(CarMake.objects.values("id", "name", "description"))
+    car_models = [
+        {
+            "id": model.id,
+            "CarMake": model.car_make.name,
+            "CarModel": model.name,
+            "CarType": model.type,
+            "CarYear": model.year,
+        }
+        for model in CarModel.objects.select_related("car_make").all()
+    ]
+    return JsonResponse({
+        "status": 200,
+        "CarMakes": car_makes,
+        "CarModels": car_models,
+    })
