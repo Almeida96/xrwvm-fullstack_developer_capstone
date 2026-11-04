@@ -155,8 +155,15 @@
           ];
           columns.forEach((value, index) => {
             const cell = document.createElement("td");
-            cell.textContent = value == null ? "" : String(value);
-            if (index === 1) cell.classList.add("dealer-name");
+            if (index === 1) {
+              const dealerLink = document.createElement("a");
+              dealerLink.href = "/dealer/" + encodeURIComponent(dealer.id) + "/";
+              dealerLink.textContent = value == null ? "" : String(value);
+              dealerLink.className = "dealer-name";
+              cell.appendChild(dealerLink);
+            } else {
+              cell.textContent = value == null ? "" : String(value);
+            }
             row.appendChild(cell);
           });
           if (isLoggedIn) {
