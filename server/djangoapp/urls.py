@@ -14,6 +14,7 @@ urlpatterns = [
 
     # List dealerships for the React frontend
     path(route='get_dealers', view=views.get_dealerships, name='get_dealerships'),
+    path(route='dealer/<int:dealer_id>', view=views.get_dealer_details, name='dealer_details'),
 
     # Dealer reviews API (Django proxy to the Node.js service)
     path(route='get_dealer_reviews/<int:dealer_id>', view=views.get_dealer_reviews, name='get_dealer_reviews'),
