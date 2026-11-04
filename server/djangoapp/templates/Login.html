@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login | Cars Dealership</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #f5f8fa; color: #1b3042; font-family: Arial, Helvetica, sans-serif; }
+    header { background: darkturquoise; padding: 18px 24px; }
+    nav { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+    nav a { color: #173a47; text-decoration: none; font-weight: 700; }
+    .brand { margin: 0; font-size: 1.7rem; font-weight: 750; }
+    main { display: flex; align-items: center; justify-content: center; padding: 62px 18px; }
+    .login-card { width: 100%; max-width: 440px; background: white; border-radius: 15px; border: 1px solid #dce8ee; padding: 34px; box-shadow: 0 14px 34px rgba(29,67,83,.08); }
+    h1 { margin: 0 0 10px; font-size: 2rem; }
+    p { line-height: 1.65; color: #52697b; }
+    form { display: flex; flex-direction: column; gap: 16px; margin-top: 25px; }
+    label { font-weight: 700; }
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    input { font: inherit; padding: 12px 13px; border: 1px solid #b3c9d3; border-radius: 8px; width: 100%; }
+    input:focus-visible { outline: 3px solid #c4e9eb; border-color: #087b8c; }
+    button { width: 100%; background: #087f91; color: white; border: 0; border-radius: 8px; padding: 13px; font: inherit; font-weight: 700; cursor: pointer; }
+    button:hover { background: #076777; }
+    button:disabled { opacity: .65; cursor: wait; }
+    .error { padding: 10px 12px; background: #fff0f0; color: #952222; border-radius: 7px; }
+  </style>
+</head>
+<body>
+  <header>
+    <nav>
+      <p class="brand">Cars Dealership</p>
+      <a href="/">Home</a>
+    </nav>
+  </header>
+  <main>
+    <section class="login-card" aria-labelledby="login-title">
+      <h1 id="login-title">Log in</h1>
+      <p>Sign in to review dealerships and access your account.</p>
+      <form id="login-form">
+        {% csrf_token %}
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" name="username" type="text" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <p id="message" class="error" role="alert" hidden></p>
+        <button type="submit" id="submit">Log in</button>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById("login-form");
+    const submit = document.getElementById("submit");
+    const message = document.getElementById("message");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      message.hidden = true;
+      submit.disabled = true;
+
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      try {
+        const response = await fetch("/djangoapp/login", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": form.querySelector('input[name="csrfmiddlewaretoken"]').value
+          },
+          body: JSON.stringify({ userName: username, password })
+        });
+
+        const data = await response.json();
+        if (!response.ok || data.status !== "Authenticated") {
+          throw new Error("Invalid username or password.");
+        }
+
+        window.location.assign("/");
+      } catch (error) {
+        message.textContent = error.message || "Login failed.";
+        message.hidden = false;
+        submit.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
