@@ -14,6 +14,11 @@
     .navlinks { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
     .navlinks a { color: #173a47; text-decoration: none; font-size: 1rem; font-weight: 650; }
     .navlinks a:hover { text-decoration: underline; }
+    .signed-in { color: #153d49; font-weight: 700; background: rgba(255,255,255,.65); padding: 9px 12px; border-radius: 8px; }
+    .sign-out { border: 1px solid #145666; background: transparent; border-radius: 8px; color: #173a47; padding: 8px 12px; font: inherit; font-weight: 650; cursor: pointer; }
+    .sign-out:hover { background: #e4ffff; }
+    .review-link { display: inline-block; color: #075b70; background: #e7f9f9; border: 1px solid #9bd3d8; border-radius: 7px; padding: 8px 11px; white-space: nowrap; font-weight: 700; text-decoration: none; }
+    .review-link:hover { background: #cff0f3; }
     main { max-width: 1200px; margin: 0 auto; padding: 34px 20px 75px; }
     h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.2; margin: 0 0 8px; }
     .subtitle { margin: 0 0 28px; font-size: 1.06rem; color: #52697b; line-height: 1.55; }
@@ -41,21 +46,26 @@
     }
   </style>
 </head>
-<body>
+<body data-authenticated="{% if request.user.is_authenticated %}true{% else %}false{% endif %}">
   <header>
     <nav class="navbar" aria-label="Main navigation">
       <p class="brand">Cars Dealership</p>
       <div class="navlinks">
         <a href="/" aria-current="page">Home</a>
-        <a href="/login">Login</a>
+        {% if request.user.is_authenticated %}
+        <span class="signed-in">Signed in as: <strong>{{ request.user.username }}</strong></span>
+        <button type="button" class="sign-out" id="logout-button">Log out</button>
+        {% else %}
+        <a href="/login/">Login</a>
         <a href="/register">Register</a>
+        {% endif %}
       </div>
     </nav>
   </header>
 
   <main>
     <h1>Explore dealerships</h1>
-    <p class="subtitle">Find car dealerships across the United States, even before signing in.</p>
+    <p class="subtitle">Find and explore car dealerships across the United States.</p>
 
     <section class="panel" aria-labelledby="dealers-heading">
       <div class="toolbar">
@@ -81,6 +91,9 @@
               <th scope="col">State</th>
               <th scope="col">Address</th>
               <th scope="col">ZIP</th>
+              {% if request.user.is_authenticated %}
+              <th scope="col">Review Dealer</th>
+              {% endif %}
             </tr>
           </thead>
           <tbody id="dealers-body"></tbody>
@@ -95,6 +108,20 @@
     const tbody = document.getElementById("dealers-body");
     const message = document.getElementById("message");
     const count = document.getElementById("dealer-count");
+    const isLoggedIn = document.body.dataset.authenticated === "true";
+
+    const logoutButton = document.getElementById("logout-button");
+    if (logoutButton) {
+      logoutButton.addEventListener("click", async () => {
+        try {
+          const response = await fetch("/djangoapp/logout", { credentials: "same-origin" });
+          if (!response.ok) throw new Error("Logout failed");
+          window.location.assign("/");
+        } catch (error) {
+          window.alert("Could not log out. Please try again.");
+        }
+      });
+    }
 
     async function loadDealerships(state = "All") {
       message.classList.remove("error");
@@ -132,6 +159,16 @@
             if (index === 1) cell.classList.add("dealer-name");
             row.appendChild(cell);
           });
+          if (isLoggedIn) {
+            const reviewCell = document.createElement("td");
+            const reviewLink = document.createElement("a");
+            reviewLink.href = "/postreview/" + encodeURIComponent(dealer.id);
+            reviewLink.className = "review-link";
+            reviewLink.textContent = "Review Dealer";
+            reviewLink.setAttribute("aria-label", "Review " + dealer.full_name);
+            reviewCell.appendChild(reviewLink);
+            row.appendChild(reviewCell);
+          }
           fragment.appendChild(row);
         });
         tbody.appendChild(fragment);
