@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Contact the Cars Dealership support team about dealerships, reviews, and your experience with the platform.">
+  <title>Contact Us | Cars Dealership</title>
+  <link rel="stylesheet" href="/static/bootstrap.min.css">
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .contact-page { margin: 0; background: #f6f9fb; color: #1b2940; font-family: Arial, Helvetica, sans-serif; }
+    .contact-page .site-nav { background: darkturquoise; min-height: 84px; padding: 12px 0; }
+    .contact-page .brand { font-size: 1.65rem; font-weight: 750; color: #103243; text-decoration: none; }
+    .contact-page .nav-link { color: #164653; font-weight: 600; }
+    .contact-page .nav-link:hover, .contact-page .nav-link.active { color: #071f30; text-decoration: underline; text-underline-offset: 7px; }
+    .contact-page main { max-width: 1160px; margin: 0 auto; padding: 48px 24px 80px; }
+    .contact-page .intro { background: #fff; border: 1px solid #dfebef; border-radius: 18px; padding: clamp(28px, 5vw, 58px); box-shadow: 0 12px 38px rgba(16,50,67,.06); }
+    .contact-page .eyebrow { font-size: .83rem; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; color: #147b89; }
+    .contact-page h1 { font-size: clamp(2rem, 4vw, 3.3rem); font-weight: 800; line-height: 1.15; margin: 14px 0 18px; }
+    .contact-page .lead-copy { color: #4e6072; font-size: 1.08rem; line-height: 1.85; margin-bottom: 0; max-width: 790px; }
+    .contact-page .contact-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px; align-items: start; margin-top: 28px; }
+    .contact-page .contact-card { background: white; border: 1px solid #dfebef; border-radius: 16px; box-shadow: 0 10px 28px rgba(16,50,67,.06); overflow: hidden; }
+    .contact-page .contact-image { width: 100%; max-width: none; height: 285px; display: block; object-fit: cover; align-self: stretch; }
+    .contact-page .contact-card-content { padding: 28px; }
+    .contact-page h2 { font-size: 1.5rem; font-weight: 750; margin: 0 0 12px; }
+    .contact-page .muted { color: #576b7a; line-height: 1.65; }
+    .contact-page .details { padding: 0; font-size: 1rem; color: #1b2940; }
+    .contact-page .details dl { margin: 0; }
+    .contact-page .details dt { font-size: .88rem; font-weight: 750; color: #0b7282; text-transform: uppercase; letter-spacing: .06em; margin: 18px 0 5px; }
+    .contact-page .details dd { margin: 0; color: #405466; line-height: 1.6; }
+    .contact-page .details a { color: #0b6477; font-weight: 650; overflow-wrap: anywhere; }
+    .contact-page .contact-action { display: inline-block; margin-top: 22px; background: #0d7787; color: white; padding: 12px 20px; border-radius: 9px; text-decoration: none; font-weight: 700; }
+    .contact-page .contact-action:hover { background: #095d6a; color: white; }
+    .contact-page .demo-note { font-size: .85rem; color: #617384; margin: 24px 2px 0; }
+    .contact-page footer { max-width: 1160px; margin: 0 auto; padding: 25px 24px 38px; color: #617384; border-top: 1px solid #dbe7eb; font-size: .9rem; }
+    @media (max-width: 760px) { .contact-page .contact-layout { grid-template-columns: 1fr; } .contact-page main { padding: 24px 16px 48px; } }
+  </style>
+</head>
+<body class="contact-page">
+  <nav class="navbar navbar-expand-lg navbar-light site-nav" aria-label="Main navigation">
+    <div class="container-fluid">
+      <a class="brand" href="/">Cars Dealership</a>
+      <div class="d-flex flex-wrap align-items-center gap-3">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="/about">About Us</a>
+        <a class="nav-link active" href="/contact" aria-current="page">Contact Us</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="intro" aria-labelledby="contact-heading">
+      <p class="eyebrow">We're here to help</p>
+      <h1 id="contact-heading">Contact Us</h1>
+      <p class="lead-copy">
+        Have a question about a dealership, customer reviews, or using our platform?
+        Reach out to our team. We welcome questions and feedback that help make
+        finding the right dealership easier.
+      </p>
+    </section>
+
+    <div class="contact-layout">
+      <section class="contact-card" aria-labelledby="contact-support-heading">
+        <img class="contact-image" src="/static/contactus.png" alt="Customer support illustration for Cars Dealership">
+        <div class="contact-card-content">
+          <h2 id="contact-support-heading">How can we help?</h2>
+          <p class="muted">
+            Contact our customer experience team for assistance with finding dealerships,
+            understanding reviews, or reporting an issue with the website.
+          </p>
+          <a class="contact-action" href="mailto:support@example.com?subject=Cars%20Dealership%20Support">Email our support team</a>
+        </div>
+      </section>
+
+      <section class="contact-card" aria-labelledby="contact-details-heading">
+        <div class="contact-card-content details">
+          <h2 id="contact-details-heading">Contact details</h2>
+          <dl>
+            <dt>Email</dt>
+            <dd><a href="mailto:support@example.com">support@example.com</a></dd>
+
+            <dt>Phone</dt>
+            <dd><a href="tel:+12025550147">+1 (202) 555-0147</a></dd>
+
+            <dt>Mailing address</dt>
+            <dd>123 Example Street<br>Springfield, IL 62704<br>United States</dd>
+
+            <dt>Support hours</dt>
+            <dd>Monday–Friday, 9:00 a.m.–5:00 p.m. (Central Time)</dd>
+
+            <dt>Common inquiries</dt>
+            <dd>Dealership listings, customer feedback, account assistance, and general questions.</dd>
+          </dl>
+        </div>
+      </section>
+    </div>
+    <p class="demo-note">This is a capstone demonstration website. The address, telephone number, and email shown above are illustrative, not active support contacts.</p>
+  </main>
+
+  <footer>Cars Dealership &middot; Full Stack Development Capstone Project</footer>
+</body>
+</html>
