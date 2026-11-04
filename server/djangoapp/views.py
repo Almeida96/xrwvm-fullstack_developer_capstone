@@ -12,9 +12,12 @@ from django.http import JsonResponse
 from django.contrib.auth import login, authenticate, logout
 import logging
 import json
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from datetime import date
 from requests.exceptions import RequestException, HTTPError
-from .restapis import get_request
+from .restapis import get_request, post_review
 from .models import CarMake, CarModel
 # from .populate import initiate
 
@@ -114,9 +117,52 @@ def get_dealer_details(request, dealer_id):
 
     return JsonResponse({"status": 200, "dealer": dealer_list})
 
-# Create a `add_review` view to submit a review
-# def add_review(request):
-# ...
+# Persist a signed-in user's dealership review in the Node.js/MongoDB service.
+@login_required(login_url="/login/")
+@require_POST
+@csrf_protect
+def add_review(request):
+    try:
+        body = json.loads(request.body)
+        dealer_id = int(body.get("dealership"))
+        year = int(body.get("car_year"))
+        review_text = str(body.get("review", "")).strip()
+        car_make = str(body.get("car_make", "")).strip()
+        car_model = str(body.get("car_model", "")).strip()
+        purchase_date = str(body.get("purchase_date", "")).strip()
+        purchased = body.get("purchase")
+        date.fromisoformat(purchase_date)
+    except (TypeError, ValueError, AttributeError, json.JSONDecodeError):
+        return JsonResponse({"error": "Invalid review input"}, status=400)
+
+    if (
+        dealer_id < 1
+        or not review_text
+        or year < 2015
+        or year > 2023
+        or type(purchased) is not bool
+        or not CarModel.objects.filter(
+            car_make__name=car_make, name=car_model, year=year
+        ).exists()
+    ):
+        return JsonResponse({"error": "Missing or invalid review details"}, status=400)
+
+    data = {
+        "name": request.user.get_full_name().strip() or request.user.get_username(),
+        "dealership": dealer_id,
+        "review": review_text,
+        "purchase": purchased,
+        "purchase_date": purchase_date,
+        "car_make": car_make,
+        "car_model": car_model,
+        "car_year": year,
+    }
+    try:
+        saved = post_review(data)
+    except (RequestException, ValueError) as error:
+        logger.warning("Unable to save dealership review: %s", error)
+        return JsonResponse({"error": "Review service unavailable"}, status=502)
+    return JsonResponse({"status": 200, "review": saved})
 
 # List the car makes and models used by the React post-review form.
 def get_cars(request):
