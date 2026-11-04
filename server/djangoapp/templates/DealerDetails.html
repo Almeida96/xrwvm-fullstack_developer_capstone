@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dealer Reviews | Cars Dealership</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #f5f8fa; color: #1b3042; font-family: Arial, Helvetica, sans-serif; }
+    header { background: darkturquoise; padding: 17px 24px; }
+    nav { max-width: 1200px; margin: auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; }
+    .brand { font-size: 1.6rem; font-weight: 750; margin: 0; }
+    .navlinks { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .navlinks a { color: #154450; text-decoration: none; font-weight: 700; }
+    .navlinks a:hover { text-decoration: underline; }
+    .signed-in { background: rgba(255,255,255,.65); border-radius: 8px; padding: 9px 12px; font-weight: 700; }
+    main { max-width: 1200px; margin: 0 auto; padding: 29px 20px 65px; }
+    .back { color: #146277; text-decoration: none; font-weight: 700; }
+    .back:hover { text-decoration: underline; }
+    .card { background: white; border: 1px solid #dce8ee; border-radius: 12px; box-shadow: 0 9px 26px rgba(29,67,83,.06); }
+    .dealer-card { margin-top: 20px; padding: 26px 28px; }
+    .eyebrow { margin: 0 0 8px; font-size: .85rem; color: #147887; font-weight: 750; text-transform: uppercase; letter-spacing: .09em; }
+    h1 { font-size: clamp(1.7rem, 4vw, 2.35rem); margin: 0 0 12px; }
+    .location { color: #4b6574; margin: 8px 0; line-height: 1.6; }
+    .location strong { color: #223f50; }
+    .meta { display: flex; gap: 16px; flex-wrap: wrap; margin: 16px 0 0; }
+    .meta span { padding: 8px 12px; background: #eaf8f9; border-radius: 7px; color: #166778; font-weight: 700; font-size: .92rem; }
+    .section-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin: 29px 0 16px; }
+    h2 { margin: 0; font-size: 1.55rem; }
+    .reviews-count { font-weight: 700; color: #597180; }
+    .reviews-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .review-card { padding: 19px 20px; min-height: 180px; }
+    .reviewer { margin: 0; font-size: 1.05rem; color: #23485a; }
+    .review-car { font-size: .89rem; color: #657887; margin: 8px 0 16px; }
+    .review-text { margin: 0; line-height: 1.55; color: #253b49; overflow-wrap: anywhere; }
+    .review-date { color: #6c818e; font-size: .87rem; margin-top: 15px; }
+    .message { margin-top: 20px; padding: 20px 24px; color: #5f7685; }
+    .message.error { color: #a62c35; background: #fff0f0; }
+    [hidden] { display: none !important; }
+    @media (max-width: 900px) { .reviews-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 600px) {
+      header { padding: 15px; }
+      main { padding: 23px 13px 50px; }
+      .dealer-card { padding: 21px 18px; }
+      .reviews-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body data-dealer-id="{{ dealer_id }}" data-authenticated="{% if request.user.is_authenticated %}true{% else %}false{% endif %}">
+  <header>
+    <nav aria-label="Main navigation">
+      <p class="brand">Cars Dealership</p>
+      <div class="navlinks">
+        <a href="/">Home</a>
+        <a href="/dealers/">All Dealerships</a>
+        {% if request.user.is_authenticated %}
+        <span class="signed-in">Signed in as: {{ request.user.username }}</span>
+        {% else %}
+        <a href="/login/">Login</a>
+        {% endif %}
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <a class="back" href="/dealers/">&larr; Back to dealerships</a>
+
+    <section class="card dealer-card" aria-labelledby="dealer-name">
+      <p class="eyebrow">Dealer details &middot; #{{ dealer_id }}</p>
+      <h1 id="dealer-name">Loading dealership...</h1>
+      <p class="location" id="dealer-address"></p>
+      <div class="meta">
+        <span id="dealer-location">Loading location...</span>
+        <span id="dealer-zip">ZIP</span>
+      </div>
+    </section>
+
+    <div class="section-head">
+      <h2 id="reviews-heading">Customer Reviews</h2>
+      <span class="reviews-count" id="reviews-count">Loading...</span>
+    </div>
+    <div id="reviews-list" class="reviews-grid" aria-labelledby="reviews-heading"></div>
+    <p class="card message" id="message" role="status" hidden></p>
+  </main>
+
+  <script>
+    const dealerId = Number(document.body.dataset.dealerId);
+    const nameEl = document.getElementById("dealer-name");
+    const addressEl = document.getElementById("dealer-address");
+    const locationEl = document.getElementById("dealer-location");
+    const zipEl = document.getElementById("dealer-zip");
+    const countEl = document.getElementById("reviews-count");
+    const listEl = document.getElementById("reviews-list");
+    const messageEl = document.getElementById("message");
+
+    const showMessage = (text, isError = false) => {
+      messageEl.hidden = false;
+      messageEl.textContent = text;
+      messageEl.classList.toggle("error", isError);
+    };
+
+    function addReview(review) {
+      const card = document.createElement("article");
+      card.className = "card review-card";
+
+      const reviewer = document.createElement("h3");
+      reviewer.className = "reviewer";
+      reviewer.textContent = review.name || "Anonymous customer";
+
+      const car = document.createElement("p");
+      car.className = "review-car";
+      car.textContent = [review.car_year, review.car_make, review.car_model].filter(Boolean).join(" ") || "Customer review";
+
+      const text = document.createElement("p");
+      text.className = "review-text";
+      text.textContent = review.review || "No review text provided.";
+
+      card.append(reviewer, car, text);
+
+      if (review.purchase_date) {
+        const date = document.createElement("p");
+        date.className = "review-date";
+        date.textContent = "Purchase date: " + review.purchase_date;
+        card.appendChild(date);
+      }
+      return card;
+    }
+
+    async function showDealerDetails() {
+      if (!Number.isInteger(dealerId) || dealerId < 1) {
+        showMessage("Invalid dealership ID.", true);
+        return;
+      }
+
+      try {
+        const [dealerResponse, reviewsResponse] = await Promise.all([
+          fetch("/djangoapp/dealer/" + dealerId, { credentials: "same-origin" }),
+          fetch("/djangoapp/get_dealer_reviews/" + dealerId, { credentials: "same-origin" })
+        ]);
+        if (!dealerResponse.ok || !reviewsResponse.ok) {
+          throw new Error("Unable to load the dealership information.");
+        }
+        const detail = await dealerResponse.json();
+        const reviews = await reviewsResponse.json();
+        if (detail.status !== 200 || !Array.isArray(detail.dealer) || !detail.dealer.length) {
+          throw new Error("Dealership not found.");
+        }
+        if (!Array.isArray(reviews)) {
+          throw new Error("Invalid reviews response.");
+        }
+
+        const dealer = detail.dealer[0];
+        nameEl.textContent = dealer.full_name || "Dealership #" + dealerId;
+        addressEl.textContent = dealer.address || "";
+        locationEl.textContent = [dealer.city, dealer.state].filter(Boolean).join(", ");
+        zipEl.textContent = "ZIP: " + (dealer.zip || "N/A");
+        countEl.textContent = reviews.length + (reviews.length === 1 ? " review" : " reviews");
+
+        listEl.replaceChildren();
+        if (!reviews.length) {
+          showMessage("No reviews have been posted for this dealership.");
+          return;
+        }
+        const fragment = document.createDocumentFragment();
+        reviews.forEach(review => fragment.appendChild(addReview(review)));
+        listEl.appendChild(fragment);
+      } catch (error) {
+        nameEl.textContent = "Dealer #" + dealerId;
+        countEl.textContent = "Unavailable";
+        showMessage(error.message || "Unable to load dealership details.", true);
+      }
+    }
+
+    showDealerDetails();
+  </script>
+</body>
+</html>
