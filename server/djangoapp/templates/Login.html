@@ -81,7 +81,7 @@
           throw new Error("Invalid username or password.");
         }
 
-        window.location.assign("/");
+        window.location.assign("/dealers/");
       } catch (error) {
         message.textContent = error.message || "Login failed.";
         message.hidden = false;
