@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Post Review | Cars Dealership</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; background: #f5f8fa; color: #1b3042; font-family: Arial, Helvetica, sans-serif; min-height: 100vh; }
+    header { background: darkturquoise; padding: 18px 24px; }
+    nav { max-width: 1100px; margin: auto; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+    nav a { color: #154450; font-weight: 700; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+    .brand { font-size: 1.65rem; font-weight: 750; margin: 0; }
+    .navigation { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+    .username { font-weight: 700; background: rgba(255,255,255,.7); padding: 8px 12px; border-radius: 8px; }
+    main { max-width: 900px; margin: 28px auto 65px; padding: 0 18px; }
+    .back { color: #126779; font-weight: 700; text-decoration: none; }
+    .card { background: white; border: 1px solid #dce8ee; border-radius: 13px; box-shadow: 0 12px 30px rgba(24,65,82,.07); margin-top: 17px; padding: 28px 32px; }
+    .eyebrow { margin: 0 0 10px; color: #087e8e; font-size: .82rem; font-weight: 750; text-transform: uppercase; letter-spacing: .09em; }
+    h1 { margin: 0 0 8px; font-size: 2rem; }
+    .subtitle { margin: 0 0 22px; color: #617786; }
+    #dealer-name { color: #125e70; font-weight: 700; }
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    .field label, .fieldset-label { font-weight: 700; font-size: .94rem; }
+    textarea, input, select { font: inherit; color: #1b3042; width: 100%; border: 1px solid #b7cbd5; background: #fff; border-radius: 8px; padding: 12px; }
+    textarea { resize: vertical; min-height: 110px; line-height: 1.5; }
+    input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #b8e8eb; border-color: #087b8c; }
+    input[readonly] { background: #f1f5f7; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+    .form-notice { padding: 10px 13px; color: #526a7a; background: #eff8fa; border-radius: 8px; margin-bottom: 0; font-size: .9rem; }
+    .actions { display: flex; align-items: center; gap: 18px; justify-content: space-between; margin-top: 20px; }
+    button { background: #087f91; color: white; border: none; border-radius: 9px; padding: 13px 22px; font: inherit; font-weight: 700; cursor: pointer; }
+    button:hover { background: #066a78; }
+    button:disabled { opacity: .6; cursor: wait; }
+    #status { padding: 11px 14px; border-radius: 8px; margin: 18px 0 0; }
+    #status.error { background: #fff0f0; color: #a02736; }
+    #status.success { background: #eaf8ee; color: #205e38; }
+    [hidden] { display: none !important; }
+    @media (max-width: 630px) { .form-grid { grid-template-columns: 1fr; } .card { padding: 22px 17px; } .actions { align-items: flex-start; flex-direction: column; } }
+  </style>
+</head>
+<body data-dealer-id="{{ dealer_id }}">
+  <header>
+    <nav aria-label="Main navigation">
+      <p class="brand">Cars Dealership</p>
+      <div class="navigation">
+        <a href="/dealers/">All Dealerships</a>
+        <span class="username">Signed in as: {{ request.user.username }}</span>
+      </div>
+    </nav>
+  </header>
+  <main>
+    <a class="back" href="/dealer/{{ dealer_id }}/">&larr; Back to dealer details</a>
+    <section class="card" aria-labelledby="page-title">
+      <p class="eyebrow">Customer feedback</p>
+      <h1 id="page-title">Post Review</h1>
+      <p class="subtitle">Reviewing <span id="dealer-name">Dealer #{{ dealer_id }}</span></p>
+
+      <form id="review-form">
+        {% csrf_token %}
+        <div class="field">
+          <label for="review">Your review</label>
+          <textarea id="review" name="review" rows="4" placeholder="Tell us about your experience with this dealership..." required></textarea>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label for="purchase-date">Purchase Date</label>
+            <input id="purchase-date" name="purchase_date" type="date" required>
+          </div>
+          <div class="field">
+            <label for="car-model">Car Make and Model</label>
+            <select id="car-model" name="car_model" required>
+              <option value="">Loading available cars...</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="car-year">Car Year</label>
+            <input id="car-year" name="car_year" type="number" min="2015" max="2023" placeholder="Select a car model" readonly required>
+          </div>
+          <div class="field">
+            <label for="purchased">Did you purchase the car?</label>
+            <select id="purchased" name="purchase" required>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+        </div>
+        <p class="form-notice">Fill in the details and take the screenshot for Task 21 <strong>before</strong> posting the review.</p>
+        <p id="status" role="status" hidden></p>
+        <div class="actions">
+          <span>Submitting as <strong>{{ request.user.username }}</strong></span>
+          <button id="submit" type="submit">Post Review</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    const dealerId = Number(document.body.dataset.dealerId);
+    const form = document.getElementById("review-form");
+    const modelSelect = document.getElementById("car-model");
+    const yearInput = document.getElementById("car-year");
+    const submitButton = document.getElementById("submit");
+    const statusEl = document.getElementById("status");
+    const showStatus = (message, ok = false) => {
+      statusEl.textContent = message;
+      statusEl.className = ok ? "success" : "error";
+      statusEl.hidden = false;
+    };
+
+    async function loadFormData() {
+      try {
+        const [dealerRes, carsRes] = await Promise.all([
+          fetch("/djangoapp/dealer/" + dealerId, { credentials: "same-origin" }),
+          fetch("/djangoapp/get_cars", { credentials: "same-origin" })
+        ]);
+        if (!dealerRes.ok || !carsRes.ok) throw new Error("Could not load form data.");
+        const dealerData = await dealerRes.json();
+        const carsData = await carsRes.json();
+        if (!Array.isArray(dealerData.dealer) || !dealerData.dealer.length || !Array.isArray(carsData.CarModels)) {
+          throw new Error("Invalid dealer or car data.");
+        }
+        document.getElementById("dealer-name").textContent = dealerData.dealer[0].full_name;
+        modelSelect.replaceChildren(new Option("Choose Car Make and Model", ""));
+
+        carsData.CarModels.forEach((car) => {
+          const option = new Option(car.CarMake + " " + car.CarModel + " (" + car.CarYear + ")", String(car.id));
+          option.dataset.make = car.CarMake;
+          option.dataset.model = car.CarModel;
+          option.dataset.year = String(car.CarYear);
+          modelSelect.appendChild(option);
+        });
+      } catch (error) {
+        modelSelect.replaceChildren(new Option("Unable to load cars", ""));
+        showStatus("Unable to load dealership or car models. Check Django and Node.js services.");
+      }
+    }
+
+    modelSelect.addEventListener("change", () => {
+      const choice = modelSelect.selectedOptions[0];
+      yearInput.value = choice?.dataset.year || "";
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const choice = modelSelect.selectedOptions[0];
+      if (!choice?.dataset.make || !form.reportValidity()) return;
+
+      submitButton.disabled = true;
+      statusEl.hidden = true;
+      const payload = {
+        dealership: dealerId,
+        review: document.getElementById("review").value.trim(),
+        purchase_date: document.getElementById("purchase-date").value,
+        purchase: document.getElementById("purchased").value === "true",
+        car_make: choice.dataset.make,
+        car_model: choice.dataset.model,
+        car_year: Number(choice.dataset.year)
+      };
+
+      try {
+        const res = await fetch("/djangoapp/add_review", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": form.querySelector('input[name="csrfmiddlewaretoken"]').value
+          },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json().catch(() => ({}));
+        if (!res.ok || result.status !== 200) {
+          throw new Error(result.error || "Unable to post review.");
+        }
+        window.location.assign("/dealer/" + dealerId + "/");
+      } catch (error) {
+        showStatus(error.message || "Review submission failed.");
+        submitButton.disabled = false;
+      }
+    });
+
+    loadFormData();
+  </script>
+</body>
+</html>
