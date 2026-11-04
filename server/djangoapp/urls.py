@@ -20,6 +20,9 @@ urlpatterns = [
     # Dealer reviews API (Django proxy to the Node.js service)
     path(route='get_dealer_reviews/<int:dealer_id>', view=views.get_dealer_reviews, name='get_dealer_reviews'),
 
+    # Car make/model listings for the review form
+    path(route='get_cars', view=views.get_cars, name='get_cars'),
+
     # path for add a review view
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
