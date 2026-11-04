@@ -185,7 +185,7 @@
     // Filtered pages use a real browser URL, so the state is visible in screenshots.
     // When a specific state is selected the data still comes from
     // /djangoapp/get_dealers/<state>, not from a hard-coded list.
-    const statePathMatch = window.location.pathname.match(/^\\/dealers\\/([^/]+)\\/?$/);
+    const statePathMatch = window.location.pathname.match(/^\/dealers\/([^/]+)\/?$/);
     const stateInUrl = statePathMatch
       ? decodeURIComponent(statePathMatch[1])
       : "All";
