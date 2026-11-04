@@ -24,6 +24,7 @@ urlpatterns = [
     path('login/', TemplateView.as_view(template_name="Login.html"), name='login_page'),
     path('dealers/', TemplateView.as_view(template_name="Home.html"), name='dealers_page'),
     path('dealers/<str:state>/', TemplateView.as_view(template_name="Home.html"), name='dealers_filtered_page'),
+    path('dealer/<int:dealer_id>/', TemplateView.as_view(template_name="DealerDetails.html"), name='dealer_details_page'),
     path('djangoapp/', include('djangoapp.urls')),
     path('', TemplateView.as_view(template_name="Home.html")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
