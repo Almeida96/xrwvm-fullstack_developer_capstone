@@ -1,68 +1,103 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <!-- Link the style sheet here -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Learn about the team and mission behind Cars Dealership, a vehicle dealership review platform.">
+  <title>About Us | Cars Dealership</title>
+  <link rel="stylesheet" href="/static/bootstrap.min.css">
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .about-page { margin: 0; background: #f6f9fb; color: #1b2940; font-family: Arial, Helvetica, sans-serif; }
+    .about-page .site-nav { background: darkturquoise; min-height: 84px; padding: 12px 0; }
+    .about-page .brand { font-size: 1.65rem; font-weight: 750; color: #103243; text-decoration: none; }
+    .about-page .nav-link { color: #164653; font-weight: 600; }
+    .about-page .nav-link:hover, .about-page .nav-link.active { color: #071f30; text-decoration: underline; text-underline-offset: 7px; }
+    .about-page main { max-width: 1160px; margin: 0 auto; padding: 48px 24px 80px; }
+    .about-page .about-hero { background: #fff; border: 1px solid #dfebef; border-radius: 18px; padding: clamp(28px, 5vw, 58px); box-shadow: 0 12px 38px rgba(16, 50, 67, .06); }
+    .about-page .eyebrow { font-size: .83rem; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; color: #147b89; }
+    .about-page h1 { font-size: clamp(2rem, 4vw, 3.3rem); font-weight: 800; line-height: 1.15; margin: 14px 0 18px; }
+    .about-page .about-intro { max-width: 830px; color: #4e6072; font-size: 1.08rem; line-height: 1.85; margin-bottom: 0; }
+    .about-page h2 { font-size: 1.8rem; font-weight: 750; margin: 0 0 10px; }
+    .about-page .section-intro { color: #586b7b; margin-bottom: 28px; }
+    .about-page .team-section { padding-top: 54px; }
+    .about-page .team-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+    .about-page .team-card.card { margin: 0; width: 100%; border: 1px solid #dde8ed; border-radius: 16px; overflow: hidden; background: #fff; box-shadow: 0 10px 28px rgba(16, 50, 67, .06); }
+    .about-page .team-card .team-photo { display: block; width: 100%; height: 260px; object-fit: cover; object-position: center 35%; align-self: stretch; background: #e9f0f3; }
+    .about-page .team-card .card-body { padding: 23px; }
+    .about-page .team-name { font-size: 1.28rem; font-weight: 750; margin: 0 0 5px; }
+    .about-page .team-role { color: #0d7787; font-weight: 700; margin: 0 0 14px; }
+    .about-page .team-description { color: #526274; line-height: 1.65; min-height: 5.2em; }
+    .about-page .team-email { display: block; color: #0b6477; font-size: .94rem; overflow-wrap: anywhere; font-weight: 650; }
+    .about-page .team-email:hover { color: #073d4c; }
+    .about-page .demo-note { color: #667786; font-size: .83rem; margin-top: 22px; }
+    .about-page footer { max-width: 1160px; margin: 0 auto; padding: 25px 24px 38px; color: #617384; border-top: 1px solid #dbe7eb; font-size: .9rem; }
+    @media (max-width: 900px) { .about-page .team-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 640px) { .about-page main { padding: 24px 16px 48px; } .about-page .team-grid { grid-template-columns: 1fr; } .about-page .team-card .team-photo { height: 280px; } }
+  </style>
 </head>
-<div>
-  <nav class="navbar navbar-expand-lg navbar-light" style="background-color:darkturquoise; height: 1in;">
+<body class="about-page">
+  <nav class="navbar navbar-expand-lg navbar-light site-nav" aria-label="Main navigation">
     <div class="container-fluid">
-      <h2 style="padding-right: 5%;">Dealerships</h2>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarText">
-        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link" style="font-size: larger;" aria-current="page" href="/">Home</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link active" style="font-size: larger;" href="/about">About Us</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" style="font-size: larger;" href="/contact">Contact Us</a>
-          </li>
-        </ul>
+      <a class="brand" href="/">Cars Dealership</a>
+      <div class="d-flex flex-wrap align-items-center gap-3">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link active" href="/about" aria-current="page">About Us</a>
+        <a class="nav-link" href="/contact">Contact Us</a>
       </div>
     </div>
   </nav>
-  
-    <div class="card" style="width: 80%;margin: auto; margin-top:5%;">
-      <div class="banner" name="about-header">
-      <!-- Insert header information here -->
-      </div>
-      <div style="display: flex;flex-direction: row; margin:auto">
-      <div class="card" style="width: 30%;">
-        <img class="card-img-top" src="/static/person.png" alt="Card image">
-        <div class="card-body">
-          <p class="title">Person1</p>
-          <p>Person1 Title</p>
-          <p class="card-text">Some text that explains the person1 in about 2 short sentences</p>
-          <p>person1@example.com</p>
-        </div>
-      </div>
 
-      <div class="card" style="width: 30%;">
-        <img class="card-img-top" src="/static/person.png" alt="Card image">
-        <div class="card-body">
-          <p class="title">Person2</p>
-          <p>Person2 Title</p>
-          <p class="card-text">Some text that explains the person2 in about 2 short sentences</p>
-          <p>person2@example.com</p>
-        </div>
-      </div>
+  <main>
+    <section class="about-hero" aria-labelledby="about-heading">
+      <p class="eyebrow">About our dealership platform</p>
+      <h1 id="about-heading">Helping drivers choose with confidence</h1>
+      <p class="about-intro">
+        Cars Dealership is a vehicle dealership discovery and review platform.
+        We make it easier for shoppers to explore dealerships, compare locations,
+        read customer experiences, and share feedback after a visit.
+        Our goal is to make every step of the car-buying journey more transparent,
+        approachable, and informed.
+      </p>
+    </section>
 
-      <div class="card" style="width: 30%;">
-        <img class="card-img-top" src="/static/person.png" alt="Card image">
-        <div class="card-body">
-          <p class="title">Person3</p>
-          <p>Person3 Title</p>
-          <p class="card-text">Some text that explains the person3 in about 2 short sentences</p>
-          <p>person3@example.com</p>
-        </div>
-      </div>
-    </div>
-    </div>
-    </div>
-    
-</div>
+    <section class="team-section" aria-labelledby="team-heading">
+      <h2 id="team-heading">Meet our team</h2>
+      <p class="section-intro">A customer-focused team supporting dealership discovery, engineering, and customer experience.</p>
+      <div class="team-grid">
+        <article class="team-card card">
+          <img class="team-photo" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&amp;fit=crop&amp;w=900&amp;q=85" alt="Illustrative professional portrait for the platform director" loading="lazy">
+          <div class="card-body">
+            <h3 class="team-name">Daniel Carter</h3>
+            <p class="team-role">Platform Director</p>
+            <p class="team-description">Daniel coordinates our dealership platform and focuses on making information useful and clear. He brings together product priorities and the customer experience.</p>
+            <a class="team-email" href="mailto:daniel.carter@example.com">daniel.carter@example.com</a>
+          </div>
+        </article>
 
+        <article class="team-card card">
+          <img class="team-photo" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&amp;fit=crop&amp;w=900&amp;q=85" alt="Illustrative professional portrait for the lead engineer" loading="lazy">
+          <div class="card-body">
+            <h3 class="team-name">Sophia Mitchell</h3>
+            <p class="team-role">Lead Software Engineer</p>
+            <p class="team-description">Sophia guides the development of reliable web features and API integrations. She focuses on performance, accessibility, and a smooth experience across devices.</p>
+            <a class="team-email" href="mailto:sophia.mitchell@example.com">sophia.mitchell@example.com</a>
+          </div>
+        </article>
+
+        <article class="team-card card">
+          <img class="team-photo" src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&amp;fit=crop&amp;w=900&amp;q=85" alt="Illustrative professional portrait for the customer experience manager" loading="lazy">
+          <div class="card-body">
+            <h3 class="team-name">Olivia Bennett</h3>
+            <p class="team-role">Customer Experience Manager</p>
+            <p class="team-description">Olivia helps translate customer feedback into practical improvements. She works to make dealership information easier to understand and reviews more useful for shoppers.</p>
+            <a class="team-email" href="mailto:olivia.bennett@example.com">olivia.bennett@example.com</a>
+          </div>
+        </article>
+      </div>
+      <p class="demo-note">Team names, email addresses, and portraits are illustrative content for this course project.</p>
+    </section>
+  </main>
+  <footer>Cars Dealership &middot; Full Stack Development Capstone Project</footer>
+</body>
 </html>
