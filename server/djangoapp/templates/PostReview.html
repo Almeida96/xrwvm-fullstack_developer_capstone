@@ -169,9 +169,21 @@
           },
           body: JSON.stringify(payload)
         });
-        const result = await res.json().catch(() => ({}));
+        const contentType = res.headers.get("content-type") || "";
+        const result = contentType.includes("application/json")
+          ? await res.json().catch(() => ({}))
+          : {};
+
         if (!res.ok || result.status !== 200) {
-          throw new Error(result.error || "Unable to post review.");
+          let reason = result.error || "Unexpected response from the review service.";
+          if (res.status === 403) {
+            reason = "CSRF verification failed. Refresh the form and check the trusted origin for this laboratory URL.";
+          } else if (res.status === 401 || (res.redirected && !contentType.includes("application/json"))) {
+            reason = "Your login session has expired. Sign in again.";
+          } else if (res.status === 502) {
+            reason = "The Node.js/MongoDB backend is unavailable. Check port 3030.";
+          }
+          throw new Error("HTTP " + res.status + ": " + reason);
         }
         window.location.assign("/dealer/" + dealerId + "/");
       } catch (error) {
