@@ -182,8 +182,31 @@
       }
     }
 
-    stateFilter.addEventListener("change", event => loadDealerships(event.target.value));
-    loadDealerships();
+    // Filtered pages use a real browser URL, so the state is visible in screenshots.
+    // When a specific state is selected the data still comes from
+    // /djangoapp/get_dealers/<state>, not from a hard-coded list.
+    const statePathMatch = window.location.pathname.match(/^\\/dealers\\/([^/]+)\\/?$/);
+    const stateInUrl = statePathMatch
+      ? decodeURIComponent(statePathMatch[1])
+      : "All";
+
+    stateFilter.addEventListener("change", event => {
+      const selectedState = event.target.value;
+      const destination = selectedState === "All"
+        ? "/dealers/"
+        : "/dealers/" + encodeURIComponent(selectedState) + "/";
+      window.location.assign(destination);
+    });
+
+    (async () => {
+      // First load the state options from the full set of dealerships.
+      await loadDealerships("All");
+      if (stateInUrl !== "All") {
+        stateFilter.value = stateInUrl;
+        // Then display the filtered set from the state-specific API.
+        await loadDealerships(stateInUrl);
+      }
+    })();
   </script>
 </body>
 </html>
