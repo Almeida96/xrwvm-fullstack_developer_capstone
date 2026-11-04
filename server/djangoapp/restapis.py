@@ -31,5 +31,9 @@ def get_request(endpoint, **kwargs):
 #     request_url = sentiment_analyzer_url + "analyze/" + text
 #     # Implementation is part of a later capstone task.
 
-# def post_review(data_dict):
-#     # Implementation is part of a later capstone task.
+def post_review(data_dict):
+    """Send a new dealership review to the Node.js/MongoDB backend."""
+    url = f"{backend_url.rstrip('/')}/insert_review"
+    response = requests.post(url, json=data_dict, timeout=15)
+    response.raise_for_status()
+    return response.json()
