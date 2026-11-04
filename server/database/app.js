@@ -69,7 +69,16 @@ app.get('/fetchDealers', async (req, res) => {
 
 // Express route to fetch Dealers by a particular state
 app.get('/fetchDealers/:state', async (req, res) => {
-//Write your code here
+  try {
+    const state = req.params.state.trim();
+    // "All" resets the state filter from the React dealerships dropdown.
+    const filter = state.toLowerCase() === 'all' ? {} : { state };
+    const dealers = await Dealerships.find(filter).sort({ id: 1 });
+    return res.json(dealers);
+  } catch (error) {
+    console.error('Error fetching dealerships by state:', error);
+    return res.status(500).json({ error: 'Error fetching dealerships by state' });
+  }
 });
 
 // Express route to fetch dealer by a particular id
