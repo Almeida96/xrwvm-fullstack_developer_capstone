@@ -1,0 +1,72 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  application-validation:
+    name: Validate Django, Node.js, and React
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r server/requirements.txt
+
+      - name: Check Django project
+        working-directory: server
+        run: python manage.py check
+
+      - name: Apply Django migrations
+        working-directory: server
+        run: python manage.py migrate --noinput
+
+      - name: Load car makes and models
+        working-directory: server
+        run: python manage.py shell -c "from djangoapp.populate import initiate; initiate()"
+
+      - name: Verify seeded car catalog
+        working-directory: server
+        run: |
+          python manage.py shell -c "from djangoapp.models import CarMake, CarModel; assert CarMake.objects.count() == 5; assert CarModel.objects.count() == 110; print('Car catalog verified: 5 makes, 110 models')"
+
+      - name: Run Django unit tests
+        working-directory: server
+        run: python manage.py test djangoapp --verbosity 2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: server/frontend/package-lock.json
+
+      - name: Check Node.js backend syntax
+        run: |
+          node --check server/database/app.js
+          node --check server/database/dealership.js
+          node --check server/database/review.js
+
+      - name: Install React dependencies
+        working-directory: server/frontend
+        run: npm ci --no-audit --no-fund
+
+      - name: Build React production bundle
+        working-directory: server/frontend
+        env:
+          CI: "false"
+        run: npm run build
