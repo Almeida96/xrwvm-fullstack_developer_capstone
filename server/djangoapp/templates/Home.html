@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dealerships | Cars Dealership</title>
+  <style>
+    :root { color-scheme: light; font-family: Arial, Helvetica, sans-serif; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; background: #f5f8fa; color: #1b3042; }
+    header { background: darkturquoise; padding: 18px 24px; }
+    .navbar { max-width: 1200px; margin: auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 18px; }
+    .brand { margin: 0; font-size: 1.7rem; color: #133544; font-weight: 750; }
+    .navlinks { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+    .navlinks a { color: #173a47; text-decoration: none; font-size: 1rem; font-weight: 650; }
+    .navlinks a:hover { text-decoration: underline; }
+    main { max-width: 1200px; margin: 0 auto; padding: 34px 20px 75px; }
+    h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.2; margin: 0 0 8px; }
+    .subtitle { margin: 0 0 28px; font-size: 1.06rem; color: #52697b; line-height: 1.55; }
+    .panel { background: white; border: 1px solid #dce8ee; border-radius: 12px; box-shadow: 0 10px 28px rgba(29, 67, 83, .06); }
+    .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 20px 22px; flex-wrap: wrap; }
+    .toolbar h2 { margin: 0; font-size: 1.35rem; }
+    .filter-wrap { display: flex; align-items: center; gap: 10px; }
+    label { font-weight: 700; }
+    select { min-width: 145px; border: 1px solid #b3c9d3; background: white; color: #1b3042; border-radius: 7px; font: inherit; padding: 9px 12px; }
+    #message { margin: 0; padding: 0 22px 12px; color: #536e81; }
+    #message.error { color: #992b31; font-weight: 600; }
+    .table-scroll { width: 100%; overflow-x: auto; border-radius: 0 0 12px 12px; }
+    table { width: 100%; border-collapse: collapse; min-width: 700px; }
+    th { text-align: left; padding: 13px 16px; background: #eaf5f7; border-top: 1px solid #dce8ee; color: #204656; font-size: .9rem; }
+    td { padding: 14px 16px; border-top: 1px solid #e8eef2; font-size: .95rem; }
+    tbody tr:nth-child(even) { background: #f8fbfc; }
+    tbody tr:hover { background: #eff9fa; }
+    .dealer-name { color: #145e70; font-weight: 700; }
+    .count { font-weight: 650; color: #527180; font-size: .9rem; }
+    footer { max-width: 1200px; margin: auto; padding: 0 20px 30px; font-size: .85rem; color: #677c87; }
+    @media (max-width: 640px) {
+      header { padding: 14px 18px; }
+      main { padding: 25px 13px 55px; }
+      .toolbar { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="navbar" aria-label="Main navigation">
+      <p class="brand">Cars Dealership</p>
+      <div class="navlinks">
+        <a href="/" aria-current="page">Home</a>
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Explore dealerships</h1>
+    <p class="subtitle">Find car dealerships across the United States, even before signing in.</p>
+
+    <section class="panel" aria-labelledby="dealers-heading">
+      <div class="toolbar">
+        <div>
+          <h2 id="dealers-heading">Available dealerships</h2>
+          <span class="count" id="dealer-count" aria-live="polite">Loading dealership listings...</span>
+        </div>
+        <div class="filter-wrap">
+          <label for="state-filter">State</label>
+          <select id="state-filter" aria-label="Filter dealerships by state">
+            <option value="All">All States</option>
+          </select>
+        </div>
+      </div>
+      <p id="message" role="status">Loading dealerships...</p>
+      <div class="table-scroll">
+        <table aria-label="Dealership listings">
+          <thead>
+            <tr>
+              <th scope="col">ID</th>
+              <th scope="col">Dealer Name</th>
+              <th scope="col">City</th>
+              <th scope="col">State</th>
+              <th scope="col">Address</th>
+              <th scope="col">ZIP</th>
+            </tr>
+          </thead>
+          <tbody id="dealers-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <footer>Cars Dealership &middot; IBM Full Stack Capstone</footer>
+
+  <script>
+    const stateFilter = document.getElementById("state-filter");
+    const tbody = document.getElementById("dealers-body");
+    const message = document.getElementById("message");
+    const count = document.getElementById("dealer-count");
+
+    async function loadDealerships(state = "All") {
+      message.classList.remove("error");
+      message.textContent = "Loading dealerships...";
+      count.textContent = "";
+      tbody.replaceChildren();
+
+      try {
+        const path = state === "All"
+          ? "/djangoapp/get_dealers"
+          : "/djangoapp/get_dealers/" + encodeURIComponent(state);
+        const response = await fetch(path, { credentials: "same-origin" });
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        const result = await response.json();
+        if (result.status !== 200 || !Array.isArray(result.dealers)) {
+          throw new Error("Invalid response from dealership API");
+        }
+
+        if (state === "All") {
+          const states = [...new Set(result.dealers.map(d => d.state).filter(Boolean))].sort();
+          stateFilter.replaceChildren(new Option("All States", "All"));
+          states.forEach(name => stateFilter.add(new Option(name, name)));
+        }
+
+        const fragment = document.createDocumentFragment();
+        result.dealers.forEach(dealer => {
+          const row = document.createElement("tr");
+          const columns = [
+            dealer.id, dealer.full_name, dealer.city,
+            dealer.state, dealer.address, dealer.zip
+          ];
+          columns.forEach((value, index) => {
+            const cell = document.createElement("td");
+            cell.textContent = value == null ? "" : String(value);
+            if (index === 1) cell.classList.add("dealer-name");
+            row.appendChild(cell);
+          });
+          fragment.appendChild(row);
+        });
+        tbody.appendChild(fragment);
+        count.textContent = result.dealers.length + " dealerships";
+        message.textContent = result.dealers.length ? "" : "No dealerships found for this state.";
+      } catch (error) {
+        console.error("Unable to load dealerships:", error);
+        message.textContent = "Unable to load dealerships. Check that the Node.js service and Django are running.";
+        message.classList.add("error");
+        count.textContent = "Unavailable";
+      }
+    }
+
+    stateFilter.addEventListener("change", event => loadDealerships(event.target.value));
+    loadDealerships();
+  </script>
+</body>
+</html>
