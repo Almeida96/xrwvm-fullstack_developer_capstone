@@ -9,7 +9,7 @@
 # from datetime import datetime
 
 from django.http import JsonResponse
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout
 import logging
 import json
 from django.views.decorators.csrf import csrf_exempt
@@ -39,8 +39,14 @@ def login_user(request):
     return JsonResponse(data)
 
 # Create a `logout_request` view to handle sign out request
-# def logout_request(request):
-# ...
+def logout_request(request):
+    # Only a signed-in session can be logged out.
+    if not request.user.is_authenticated:
+        return JsonResponse({"status": "Not authenticated"}, status=401)
+
+    username = request.user.get_username()
+    logout(request)
+    return JsonResponse({"userName": username, "status": "Logged out"})
 
 # Create a `registration` view to handle sign up request
 # @csrf_exempt
