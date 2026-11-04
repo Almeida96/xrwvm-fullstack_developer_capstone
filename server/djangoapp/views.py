@@ -68,6 +68,19 @@ def get_dealerships(request):
 
     return JsonResponse({"status": 200, "dealers": dealers})
 
+def get_dealers_by_state(request, state):
+    """Return dealerships filtered by state, or all dealerships for 'All'."""
+    if request.method != "GET":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    try:
+        dealers = get_request(f"fetchDealers/{state}")
+    except (RequestException, ValueError) as error:
+        logger.warning("Unable to fetch dealerships in state %s: %s", state, error)
+        return JsonResponse({"error": "Dealership service unavailable"}, status=502)
+
+    return JsonResponse({"status": 200, "dealers": dealers})
+
 # Create a `get_dealer_reviews` view to render the reviews of a dealer
 def get_dealer_reviews(request, dealer_id):
     """Return reviews for a dealership through the Node.js/MongoDB service."""
