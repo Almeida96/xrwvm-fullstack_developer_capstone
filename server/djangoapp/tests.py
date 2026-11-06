@@ -43,3 +43,26 @@ class DealershipAppTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'id="review-form"')
         self.assertContains(response, "Signed in as: ci-test-user")
+
+    def test_login_rejects_malformed_json_and_credentials(self):
+        for payload in ('{', '[]', 'null', '{}', '{"userName": null, "password": "x"}',
+                        '{"userName": "ci-test-user", "password": {}}'):
+            with self.subTest(payload=payload):
+                response = self.client.post('/djangoapp/login', payload, content_type='application/json')
+                self.assertEqual(response.status_code, 400)
+                self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_login_only_accepts_post(self):
+        self.assertEqual(self.client.get('/djangoapp/login').status_code, 405)
+
+    def test_login_rejects_wrong_password_and_authenticates_valid_user(self):
+        response = self.client.post('/djangoapp/login', {
+            'userName': self.user.username, 'password': 'wrong-password',
+        }, content_type='application/json')
+        self.assertEqual(response.status_code, 401)
+        response = self.client.post('/djangoapp/login', {
+            'userName': self.user.username, 'password': 'StrongCIExample123!',
+        }, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['status'], 'Authenticated')
+        self.assertEqual(self.client.session['_auth_user_id'], str(self.user.pk))
