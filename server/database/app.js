@@ -1,35 +1,28 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const fs = require('fs');
-const  cors = require('cors')
+const path = require('node:path');
 const app = express()
-const port = 3030;
+const port = process.env.PORT || 3030;
 
-app.use(cors())
-app.use(require('body-parser').urlencoded({ extended: false }));
+app.use(express.json({ limit: "64kb" }));
+app.use(express.urlencoded({extended: false, limit: "64kb"}));
 
-const reviews_data = JSON.parse(fs.readFileSync("reviews.json", 'utf8'));
-const dealerships_data = JSON.parse(fs.readFileSync("dealerships.json", 'utf8'));
-
-mongoose.connect(process.env.MONGO_URI || "mongodb://mongo_db:27017/", { dbName: "dealershipsDB" });
-
+const reviews_data = JSON.parse(fs.readFileSync(path.join(__dirname, "data/reviews.json"), 'utf8'));
+const dealerships_data = JSON.parse(fs.readFileSync(path.join(__dirname, "data/dealerships.json"), 'utf8'));
 
 const Reviews = require('./review');
-
 const Dealerships = require('./dealership');
+const Counter = mongoose.model('review_counter', new mongoose.Schema({_id: String, value: Number}));
 
-try {
-  Reviews.deleteMany({}).then(()=>{
-    Reviews.insertMany(reviews_data['reviews']);
-  });
-  Dealerships.deleteMany({}).then(()=>{
-    Dealerships.insertMany(dealerships_data['dealerships']);
-  });
-  
-} catch (error) {
-  res.status(500).json({ error: 'Error fetching documents' });
+async function initialize() {
+  await mongoose.connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/", {dbName: "dealershipsDB"});
+  for (const [Model, rows] of [[Reviews, reviews_data.reviews], [Dealerships, dealerships_data.dealerships]]) {
+    await Model.bulkWrite(rows.map(row => ({updateOne: {filter: {id: row.id}, update: {$setOnInsert: row}, upsert: true}})));
+  }
+  const last = await Reviews.findOne().sort({id: -1});
+  await Counter.updateOne({_id: "review"}, {$max: {value: last?.id || 0}}, {upsert: true});
 }
-
 
 // Express route to home
 app.get('/', async (req, res) => {
@@ -101,33 +94,30 @@ app.get('/fetchDealer/:id', async (req, res) => {
 });
 
 //Express route to insert review
-app.post('/insert_review', express.raw({ type: '*/*' }), async (req, res) => {
-  data = JSON.parse(req.body);
-  const documents = await Reviews.find().sort( { id: -1 } )
-  let new_id = documents[0]['id']+1
-
-  const review = new Reviews({
-		"id": new_id,
-		"name": data['name'],
-		"dealership": data['dealership'],
-		"review": data['review'],
-		"purchase": data['purchase'],
-		"purchase_date": data['purchase_date'],
-		"car_make": data['car_make'],
-		"car_model": data['car_model'],
-		"car_year": data['car_year'],
-	});
-
+app.post('/insert_review', async (req, res) => {
+  const data = req.body;
+  if (!data || !Number.isSafeInteger(data.dealership) || data.dealership < 1 ||
+      typeof data.review !== 'string' || !data.review.trim() || data.review.length > 5000 ||
+      typeof data.name !== 'string' || !data.name.trim() || data.name.length > 300 ||
+      typeof data.purchase !== 'boolean' || !Number.isInteger(data.car_year) ||
+      data.car_year < 1900 || data.car_year > 2100 ||
+      !['car_make', 'car_model', 'purchase_date'].every(key => typeof data[key] === 'string' && data[key].length <= 100)) {
+    return res.status(400).json({error: 'Invalid review input'});
+  }
   try {
-    const savedReview = await review.save();
-    res.json(savedReview);
+    if (!await Dealerships.exists({id: data.dealership})) return res.status(404).json({error: 'Dealership not found'});
+    const counter = await Counter.findOneAndUpdate({_id: 'review'}, {$inc: {value: 1}}, {new: true});
+    const saved = await Reviews.create({...data, id: counter.value});
+    return res.status(201).json(saved);
   } catch (error) {
-		console.log(error);
-    res.status(500).json({ error: 'Error inserting review' });
+    return res.status(500).json({error: 'Unable to save review'});
   }
 });
-
-// Start the Express server
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+app.use((error, req, res, next) => {
+  if (error.type === 'entity.parse.failed') return res.status(400).json({error: 'Invalid JSON'});
+  if (error.type === 'entity.too.large') return res.status(413).json({error: 'Request too large'});
+  return res.status(500).json({error: 'Service error'});
 });
+initialize().then(() => {
+  app.listen(port, process.env.HOST || '127.0.0.1', () => console.log(`Dealership data service listening on ${port}`));
+}).catch(error => { console.error('Cannot initialize dealership database'); process.exitCode = 1; mongoose.disconnect(); });

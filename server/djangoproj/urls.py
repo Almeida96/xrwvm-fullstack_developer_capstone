@@ -23,6 +23,7 @@ from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('register/', TemplateView.as_view(template_name='Register.html'), name='register_page'),
     path('login/', TemplateView.as_view(template_name="Login.html"), name='login_page'),
     path('dealers/', TemplateView.as_view(template_name="Home.html"), name='dealers_page'),
     path('dealers/<str:state>/', TemplateView.as_view(template_name="Home.html"), name='dealers_filtered_page'),

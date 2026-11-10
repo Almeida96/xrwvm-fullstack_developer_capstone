@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Node installations and generated frontend artifacts
+node_modules/

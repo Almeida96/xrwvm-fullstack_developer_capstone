@@ -61,11 +61,11 @@
         {% csrf_token %}
         <div class="field">
           <label for="review">Your review</label>
-          <textarea id="review" name="review" rows="4" placeholder="Tell us about your experience with this dealership..." required></textarea>
+          <textarea maxlength="5000" id="review" name="review" rows="4" placeholder="Tell us about your experience with this dealership..." required></textarea>
         </div>
         <div class="form-grid">
           <div class="field">
-            <label for="purchase-date">Purchase Date</label>
+            <label for="purchase-date">Visit or Purchase Date</label>
             <input id="purchase-date" name="purchase_date" type="date" required>
           </div>
           <div class="field">
@@ -76,7 +76,7 @@
           </div>
           <div class="field">
             <label for="car-year">Car Year</label>
-            <input id="car-year" name="car_year" type="number" min="2015" max="2023" placeholder="Select a car model" readonly required>
+            <input id="car-year" name="car_year" type="number" min="1900" max="2100" placeholder="Select a car model" readonly required>
           </div>
           <div class="field">
             <label for="purchased">Did you purchase the car?</label>
@@ -86,7 +86,7 @@
             </select>
           </div>
         </div>
-        <p class="form-notice">Fill in the details and take the screenshot for Task 21 <strong>before</strong> posting the review.</p>
+        <p class="form-notice">Reviews are saved to the configured data store. Do not include private contact or payment details.</p>
         <p id="status" role="status" hidden></p>
         <div class="actions">
           <span>Submitting as <strong>{{ request.user.username }}</strong></span>
@@ -133,7 +133,7 @@
         });
       } catch (error) {
         modelSelect.replaceChildren(new Option("Unable to load cars", ""));
-        showStatus("Unable to load dealership or car models. Check Django and Node.js services.");
+        showStatus("Unable to load dealership or car models. Try again after checking the application service.");
       }
     }
 
@@ -177,11 +177,11 @@
         if (!res.ok || result.status !== 200) {
           let reason = result.error || "Unexpected response from the review service.";
           if (res.status === 403) {
-            reason = "CSRF verification failed. Refresh the form and check the trusted origin for this laboratory URL.";
+            reason = "Your secure session could not be verified. Refresh the page and try again.";
           } else if (res.status === 401 || (res.redirected && !contentType.includes("application/json"))) {
             reason = "Your login session has expired. Sign in again.";
           } else if (res.status === 502) {
-            reason = "The Node.js/MongoDB backend is unavailable. Check port 3030.";
+            reason = "The configured dealership service is unavailable.";
           }
           throw new Error("HTTP " + res.status + ": " + reason);
         }

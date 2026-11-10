@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
@@ -36,7 +37,7 @@ class CarModel(models.Model):
     name = models.CharField(max_length=100)
     type = models.CharField(max_length=20, choices=TYPE_CHOICES, default="OTHER")
     year = models.PositiveIntegerField(
-        validators=[MinValueValidator(2015), MaxValueValidator(2023)]
+        validators=[MinValueValidator(1900), MaxValueValidator(2100)]
     )
 
     class Meta:
@@ -50,3 +51,24 @@ class CarModel(models.Model):
 
     def __str__(self):
         return f"{self.car_make.name} {self.name} ({self.year})"
+
+
+class Dealership(models.Model):
+    full_name = models.CharField(max_length=200)
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100, db_index=True)
+    address = models.CharField(max_length=250)
+    zip = models.CharField(max_length=20)
+
+    class Meta:
+        ordering = ["id"]
+
+
+class DealerReview(models.Model):
+    dealership = models.ForeignKey(Dealership, on_delete=models.PROTECT, related_name="reviews")
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    car_model = models.ForeignKey(CarModel, on_delete=models.PROTECT)
+    text = models.TextField(max_length=5000)
+    purchase = models.BooleanField()
+    purchase_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)

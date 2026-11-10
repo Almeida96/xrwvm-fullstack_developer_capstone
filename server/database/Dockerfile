@@ -1,6 +1,7 @@
-FROM node:18.12.1-bullseye-slim
+FROM node:22-bookworm-slim
 
-RUN npm install -g npm@9.1.3
+WORKDIR /app
+ENV HOST=0.0.0.0
 
 ADD package.json .
 ADD app.js .

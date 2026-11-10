@@ -37,7 +37,7 @@ jobs:
 
       - name: Load car makes and models
         working-directory: server
-        run: python manage.py shell -c "from djangoapp.populate import initiate; initiate()"
+        run: python manage.py seed_demo
 
       - name: Verify seeded car catalog
         working-directory: server
@@ -51,7 +51,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
           cache-dependency-path: server/frontend/package-lock.json
 

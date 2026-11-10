@@ -1,123 +1,97 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import "./Dealers.css";
-import "../assets/style.css";
-import Header from '../Header/Header';
-
-
-const PostReview = () => {
-  const [dealer, setDealer] = useState({});
-  const [review, setReview] = useState("");
-  const [model, setModel] = useState();
-  const [year, setYear] = useState("");
-  const [date, setDate] = useState("");
-  const [carmodels, setCarmodels] = useState([]);
-
-  let curr_url = window.location.href;
-  let root_url = curr_url.substring(0,curr_url.indexOf("postreview"));
-  let params = useParams();
-  let id =params.id;
-  let dealer_url = root_url+`djangoapp/dealer/${id}`;
-  let review_url = root_url+`djangoapp/add_review`;
-  let carmodels_url = root_url+`djangoapp/get_cars`;
-
-  const postreview = async ()=>{
-    let name = sessionStorage.getItem("firstname")+" "+sessionStorage.getItem("lastname");
-    //If the first and second name are stores as null, use the username
-    if(name.includes("null")) {
-      name = sessionStorage.getItem("username");
-    }
-    if(!model || review === "" || date === "" || year === "" || model === "") {
-      alert("All details are mandatory")
-      return;
-    }
-
-    let model_split = model.split(" ");
-    let make_chosen = model_split[0];
-    let model_chosen = model_split[1];
-
-    let jsoninput = JSON.stringify({
-      "name": name,
-      "dealership": id,
-      "review": review,
-      "purchase": true,
-      "purchase_date": date,
-      "car_make": make_chosen,
-      "car_model": model_chosen,
-      "car_year": year,
-    });
-
-    console.log(jsoninput);
-    const res = await fetch(review_url, {
-      method: "POST",
-      headers: {
-          "Content-Type": "application/json",
-      },
-      body: jsoninput,
-  });
-
-  const json = await res.json();
-  if (json.status === 200) {
-      window.location.href = window.location.origin+"/dealer/"+id;
-  }
-
-  }
-  const get_dealer = async ()=>{
-    const res = await fetch(dealer_url, {
-      method: "GET"
-    });
-    const retobj = await res.json();
-    
-    if(retobj.status === 200) {
-      let dealerobjs = Array.from(retobj.dealer)
-      if(dealerobjs.length > 0)
-        setDealer(dealerobjs[0])
-    }
-  }
-
-  const get_cars = async ()=>{
-    const res = await fetch(carmodels_url, {
-      method: "GET"
-    });
-    const retobj = await res.json();
-    
-    let carmodelsarr = Array.from(retobj.CarModels)
-    setCarmodels(carmodelsarr)
-  }
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import Header from "../Header/Header";
+import { api } from "../../api";
+export default function PostReview() {
+  const { id } = useParams();
+  const [cars, setCars] = useState([]),
+    [dealer, setDealer] = useState(null),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(false),
+    [ready, setReady] = useState(false);
   useEffect(() => {
-    get_dealer();
-    get_cars();
-  },[]);
-
-
+    Promise.all([api("dealer/" + id), api("get_cars"), api("session")])
+      .then(([data, catalog, account]) => {
+        setDealer(data.dealer[0]);
+        setCars(catalog.CarModels);
+        if (!account.authenticated)
+          throw new Error("Log in before posting a review.");
+        setReady(true);
+      })
+      .catch((failure) => setError(failure.message));
+  }, [id]);
+  async function submit(event) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    const fields = new FormData(event.currentTarget),
+      car = cars.find((value) => String(value.id) === fields.get("car"));
+    try {
+      if (!car) throw new Error("Choose a car model.");
+      await api("add_review", {
+        dealership: Number(id),
+        review: fields.get("review"),
+        purchase_date: fields.get("date"),
+        purchase: fields.get("purchase") === "true",
+        car_make: car.CarMake,
+        car_model: car.CarModel,
+        car_year: car.CarYear,
+      });
+      window.location.assign("/dealer/" + id);
+    } catch (failure) {
+      setError(failure.message);
+      setBusy(false);
+    }
+  }
   return (
-    <div>
-      <Header/>
-      <div  style={{margin:"5%"}}>
-      <h1 style={{color:"darkblue"}}>{dealer.full_name}</h1>
-      <textarea id='review' cols='50' rows='7' onChange={(e) => setReview(e.target.value)}></textarea>
-      <div className='input_field'>
-      Purchase Date <input type="date" onChange={(e) => setDate(e.target.value)}/>
-      </div>
-      <div className='input_field'>
-      Car Make 
-      <select name="cars" id="cars" onChange={(e) => setModel(e.target.value)}>
-      <option value="" selected disabled hidden>Choose Car Make and Model</option>
-      {carmodels.map(carmodel => (
-          <option value={carmodel.CarMake+" "+carmodel.CarModel}>{carmodel.CarMake} {carmodel.CarModel}</option>
-      ))}
-      </select>        
-      </div >
-
-      <div className='input_field'>
-      Car Year <input type="int" onChange={(e) => setYear(e.target.value)} max={2023} min={2015}/>
-      </div>
-
-      <div>
-      <button className='postreview' onClick={postreview}>Post Review</button>
-      </div>
-    </div>
-    </div>
-  )
+    <>
+      <Header />
+      <main className="container">
+        <h1>Review {dealer?.full_name || "dealership"}</h1>
+        {error && <p role="alert">{error}</p>}
+        <form
+          className="d-grid gap-3"
+          style={{ maxWidth: 640 }}
+          onSubmit={submit}
+        >
+          <label>
+            Your review
+            <textarea
+              name="review"
+              className="form-control"
+              maxLength={5000}
+              required
+            />
+          </label>
+          <label>
+            Visit or purchase date
+            <input name="date" className="form-control" type="date" required />
+          </label>
+          <label>
+            Car model
+            <select name="car" className="form-select" required defaultValue="">
+              <option value="" disabled>
+                Choose a car
+              </option>
+              {cars.map((car) => (
+                <option key={car.id} value={car.id}>
+                  {car.CarMake} {car.CarModel} ({car.CarYear})
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Did you purchase the car?
+            <select name="purchase" className="form-select">
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </label>
+          <button className="btn btn-primary" disabled={!ready || busy}>
+            {busy ? "Saving..." : "Post review"}
+          </button>
+        </form>
+      </main>
+    </>
+  );
 }
-export default PostReview

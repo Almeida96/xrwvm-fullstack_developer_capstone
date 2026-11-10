@@ -1,96 +1,61 @@
-import React, { useState, useEffect } from 'react';
-import "./Dealers.css";
-import "../assets/style.css";
-import Header from '../Header/Header';
-import review_icon from "../assets/reviewicon.png"
-
-const Dealers = () => {
-  const [dealersList, setDealersList] = useState([]);
-  // let [state, setState] = useState("")
-  let [states, setStates] = useState([])
-
-  // let root_url = window.location.origin
-  let dealer_url ="/djangoapp/get_dealers";
-  
-  let dealer_url_by_state = "/djangoapp/get_dealers/";
- 
-  const filterDealers = async (state) => {
-    dealer_url_by_state = dealer_url_by_state+state;
-    const res = await fetch(dealer_url_by_state, {
-      method: "GET"
-    });
-    const retobj = await res.json();
-    if(retobj.status === 200) {
-      let state_dealers = Array.from(retobj.dealers)
-      setDealersList(state_dealers)
-    }
-  }
-
-  const get_dealers = async ()=>{
-    const res = await fetch(dealer_url, {
-      method: "GET"
-    });
-    const retobj = await res.json();
-    if(retobj.status === 200) {
-      let all_dealers = Array.from(retobj.dealers)
-      let states = [];
-      all_dealers.forEach((dealer)=>{
-        states.push(dealer.state)
-      });
-
-      setStates(Array.from(new Set(states)))
-      setDealersList(all_dealers)
-    }
-  }
+import React, { useEffect, useState } from "react";
+import Header from "../Header/Header";
+import { api } from "../../api";
+export default function Dealers() {
+  const [dealers, setDealers] = useState([]),
+    [state, setState] = useState("All"),
+    [error, setError] = useState(""),
+    [loading, setLoading] = useState(true);
   useEffect(() => {
-    get_dealers();
-  },[]);  
-
-
-let isLoggedIn = sessionStorage.getItem("username") != null ? true : false;
-return(
-  <div>
-      <Header/>
-
-     <table className='table'>
-      <tr>
-      <th>ID</th>
-      <th>Dealer Name</th>
-      <th>City</th>
-      <th>Address</th>
-      <th>Zip</th>
-      <th>
-      <select name="state" id="state" onChange={(e) => filterDealers(e.target.value)}>
-      <option value="" selected disabled hidden>State</option>
-      <option value="All">All States</option>
-      {states.map(state => (
-          <option value={state}>{state}</option>
-      ))}
-      </select>        
-
-      </th>
-      {isLoggedIn ? (
-          <th>Review Dealer</th>
-         ):<></>
-      }
-      </tr>
-     {dealersList.map(dealer => (
-        <tr>
-          <td>{dealer['id']}</td>
-          <td><a href={'/dealer/'+dealer['id']}>{dealer['full_name']}</a></td>
-          <td>{dealer['city']}</td>
-          <td>{dealer['address']}</td>
-          <td>{dealer['zip']}</td>
-          <td>{dealer['state']}</td>
-          {isLoggedIn ? (
-            <td><a href={`/postreview/${dealer['id']}`}><img src={review_icon} className="review_icon" alt="Post Review"/></a></td>
-           ):<></>
-          }
-        </tr>
-      ))}
-     </table>;
-  </div>
-)
+    api("get_dealers")
+      .then((data) => setDealers(data.dealers))
+      .catch((failure) => setError(failure.message))
+      .finally(() => setLoading(false));
+  }, []);
+  const visible =
+    state === "All"
+      ? dealers
+      : dealers.filter((dealer) => dealer.state === state);
+  return (
+    <>
+      <Header />
+      <main className="container">
+        <h1>Available dealerships</h1>
+        <p>Browse the sample catalog and share a review.</p>
+        <label>
+          State{" "}
+          <select
+            className="form-select"
+            value={state}
+            onChange={(event) => setState(event.target.value)}
+          >
+            <option>All</option>
+            {[...new Set(dealers.map((dealer) => dealer.state))]
+              .sort()
+              .map((value) => (
+                <option key={value}>{value}</option>
+              ))}
+          </select>
+        </label>
+        {loading && <p role="status">Loading dealerships...</p>}
+        {error && <p role="alert">{error}</p>}
+        {!loading && !error && <p>{visible.length} dealerships</p>}
+        <div className="row g-3">
+          {visible.map((dealer) => (
+            <article key={dealer.id} className="col-md-4">
+              <div className="card card-body h-100">
+                <h2 className="h5">
+                  <a href={"/dealer/" + dealer.id}>{dealer.full_name}</a>
+                </h2>
+                <p>
+                  {dealer.city}, {dealer.state}
+                </p>
+                <p>{dealer.address}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </main>
+    </>
+  );
 }
-
-export default Dealers
